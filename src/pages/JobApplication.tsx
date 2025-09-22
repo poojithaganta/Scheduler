@@ -20,6 +20,7 @@ export default function JobApplication() {
   const [office, setOffice] = useState('');
   const [resume, setResume] = useState<File | null>(null);
   const [submitted, setSubmitted] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   // Mock nearest office based on address: choose the office whose name shares a word/letter
   const nearest = (() => {
@@ -33,9 +34,31 @@ export default function JobApplication() {
 
   const options = OFFICES.map(o => ({...o, highlight: o.label === (office || nearest) }));
 
-  const onSubmit = (e: React.FormEvent) => {
+  const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setSubmitted(true);
+    setError(null);
+    const formData = new FormData();
+    formData.append('name', name);
+    formData.append('email', email);
+    formData.append('phone', phone);
+    formData.append('address', address);
+    formData.append('officeLocation', office || nearest);
+    if (resume) formData.append('resume', resume);
+
+    try {
+      const res = await fetch('/api/employees', {
+        method: 'POST',
+        body: formData,
+      });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error(data.error || 'Failed to submit');
+      }
+      setSubmitted(true);
+    } catch (err: any) {
+      setError(err.message || 'Unexpected error');
+      setSubmitted(false);
+    }
   };
 
   return (
@@ -60,6 +83,9 @@ export default function JobApplication() {
         </div>
       </form>
 
+      {error && (
+        <div className="mt-6 max-w-2xl rounded-lg border border-red-200 bg-red-50 p-4 text-red-800">{error}</div>
+      )}
       {submitted && (
         <div className="mt-8 max-w-2xl rounded-lg border border-green-200 bg-green-50 p-4">
           <div className="font-semibold text-green-800">Application submitted successfully!</div>

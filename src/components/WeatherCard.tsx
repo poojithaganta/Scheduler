@@ -21,3 +21,4 @@ export default function WeatherCard({ city, temperature, icon = '⛅', highlight
   );
 }
 
+
