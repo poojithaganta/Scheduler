@@ -85,9 +85,38 @@ export function JobApplication() {
     return () => { cancelled = true; clearTimeout(timeout); };
   }, [address, userChangedOffice]);
 
-  function onSubmit(e: React.FormEvent) {
+  async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
-    setSubmitted(true);
+    
+    try {
+      const formData = new FormData();
+      formData.append('name', name);
+      formData.append('email', email);
+      formData.append('phone', phone);
+      formData.append('address', address);
+      formData.append('officeLocation', selectedOffice.label);
+      
+      if (resume) {
+        formData.append('resume', resume);
+      }
+
+      const response = await fetch('/api/employees', {
+        method: 'POST',
+        body: formData,
+      });
+
+      if (response.ok) {
+        const result = await response.json();
+        console.log('Application submitted successfully:', result);
+        setSubmitted(true);
+      } else {
+        console.error('Failed to submit application:', response.statusText);
+        alert('Failed to submit application. Please try again.');
+      }
+    } catch (error) {
+      console.error('Error submitting application:', error);
+      alert('Error submitting application. Please try again.');
+    }
   }
 
   return (
