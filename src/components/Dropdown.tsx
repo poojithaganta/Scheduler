@@ -1,9 +1,9 @@
-import React, { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 
 type Option = {
+  id: string;
   label: string;
-  value: string;
-  highlight?: boolean;
+  isNearest?: boolean;
 };
 
 type Props = {
@@ -14,55 +14,60 @@ type Props = {
   placeholder?: string;
 };
 
-export default function Dropdown({ label, value, onChange, options, placeholder }: Props) {
+export function Dropdown({ label, value, onChange, options, placeholder }: Props) {
   const [open, setOpen] = useState(false);
-  const [query, setQuery] = useState('');
   const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    const onDocClick = (e: MouseEvent) => {
+    function onDocClick(e: MouseEvent) {
       if (!containerRef.current) return;
       if (!containerRef.current.contains(e.target as Node)) setOpen(false);
-    };
-    document.addEventListener('click', onDocClick);
-    return () => document.removeEventListener('click', onDocClick);
+    }
+    document.addEventListener('mousedown', onDocClick);
+    return () => document.removeEventListener('mousedown', onDocClick);
   }, []);
 
-  const filtered = options.filter(o => o.label.toLowerCase().includes(query.toLowerCase()));
+  const nearest = useMemo(() => options.find(o => o.isNearest), [options]);
+  const others = useMemo(() => options.filter(o => !o.isNearest), [options]);
 
   return (
-    <div className="block" ref={containerRef}>
-      <span className="block text-sm font-medium text-gray-700">{label}</span>
-      <div className="mt-1 relative">
+    <div className="relative" ref={containerRef}>
+      <label className="block">
+        <span className="block text-sm font-medium text-gray-700">{label}</span>
         <input
-          value={value || query}
-          onChange={(e) => {
-            setQuery(e.target.value);
-            onChange(e.target.value);
-          }}
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
           onFocus={() => setOpen(true)}
           placeholder={placeholder}
-          className="block w-full rounded-md border-gray-300 shadow-sm focus:border-brand-500 focus:ring-brand-500"
+          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
         />
-        {open && (
-          <div className="absolute z-20 mt-2 w-full bg-white border rounded-md shadow-card max-h-60 overflow-auto">
-            {filtered.length === 0 && (
-              <div className="px-3 py-2 text-sm text-gray-500">No results</div>
-            )}
-            {filtered.map((opt) => (
-              <button
-                key={opt.value}
-                type="button"
-                onClick={() => { onChange(opt.label); setOpen(false); }}
-                className={`w-full text-left px-3 py-2 text-sm hover:bg-gray-50 ${opt.highlight ? 'bg-brand-50 text-brand-700' : 'text-gray-700'}`}
-              >
-                {opt.label}
-                {opt.highlight && <span className="ml-2 inline-flex items-center rounded bg-brand-100 text-brand-700 px-1.5 py-0.5 text-xs">Nearest</span>}
-              </button>
-            ))}
-          </div>
-        )}
-      </div>
+      </label>
+      {open && (
+        <div className="absolute z-10 mt-1 w-full rounded-md border bg-white shadow-lg">
+          {nearest && (
+            <button
+              type="button"
+              onClick={() => { onChange(nearest.label); setOpen(false); }}
+              className="w-full text-left px-3 py-2 bg-blue-50 hover:bg-blue-100"
+            >
+              <div className="flex items-center justify-between">
+                <span className="font-medium text-blue-800">{nearest.label}</span>
+                <span className="text-xs text-blue-700">Nearest</span>
+              </div>
+            </button>
+          )}
+          {others.map(opt => (
+            <button
+              key={opt.id}
+              type="button"
+              onClick={() => { onChange(opt.label); setOpen(false); }}
+              className="w-full text-left px-3 py-2 hover:bg-gray-50"
+            >
+              {opt.label}
+            </button>
+          ))}
+        </div>
+      )}
     </div>
   );
 }
