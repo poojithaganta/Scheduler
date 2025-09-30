@@ -29,8 +29,16 @@ public class Employee {
     @Column(name = "office_location")
     private String officeLocation;
 
-    @Column(name = "resume_file")
-    private String resumeFile;
+    @Lob
+    @Basic(fetch = FetchType.LAZY)
+    @Column(name = "resume_data")
+    private byte[] resumeData;
+
+    @Column(name = "resume_content_type")
+    private String resumeContentType;
+
+    @Column(name = "resume_filename")
+    private String resumeFilename;
 
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
@@ -44,8 +52,12 @@ public class Employee {
     public void setAddress(String address) { this.address = address; }
     public String getOfficeLocation() { return officeLocation; }
     public void setOfficeLocation(String officeLocation) { this.officeLocation = officeLocation; }
-    public String getResumeFile() { return resumeFile; }
-    public void setResumeFile(String resumeFile) { this.resumeFile = resumeFile; }
+    public byte[] getResumeData() { return resumeData; }
+    public void setResumeData(byte[] resumeData) { this.resumeData = resumeData; }
+    public String getResumeContentType() { return resumeContentType; }
+    public void setResumeContentType(String resumeContentType) { this.resumeContentType = resumeContentType; }
+    public String getResumeFilename() { return resumeFilename; }
+    public void setResumeFilename(String resumeFilename) { this.resumeFilename = resumeFilename; }
 }
 
 

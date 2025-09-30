@@ -5,7 +5,8 @@ export default defineConfig({
   plugins: [react()],
   server: {
     proxy: {
-      '/api': 'http://localhost:8080',
+      // When running via docker-compose, the backend is accessible by service name
+      '/api': 'http://backend:8080',
     },
   },
 });
