@@ -11,8 +11,11 @@ COPY gradle.properties .
 # Copy source code
 COPY src src
 
-# Make gradlew executable
-RUN chmod +x gradlew
+# Install dos2unix to handle Windows line endings and make gradlew executable
+RUN apt-get update && apt-get install -y dos2unix && \
+    dos2unix gradlew && \
+    chmod +x gradlew && \
+    rm -rf /var/lib/apt/lists/*
 
 # Build the application
 RUN ./gradlew build -x test
