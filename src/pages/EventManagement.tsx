@@ -25,6 +25,7 @@ export function EventManagement() {
   const [weatherData, setWeatherData] = useState<WeatherData[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [selectedLocation, setSelectedLocation] = useState<WeatherData | null>(null);
 
   const bestLocation = useMemo(() => {
     if (weatherData.length === 0) return null;
@@ -83,9 +84,12 @@ export function EventManagement() {
           const suitability = calculateWeatherSuitability(best);
           console.log('Weather suitability for best location:', suitability);
           setModalState(suitability.isSuitable ? 'best' : 'none');
+          // Set the best location as selected by default
+          setSelectedLocation(best);
         } else {
           console.log('No suitable location found');
           setModalState('none');
+          setSelectedLocation(null);
         }
       }
     } catch (err) {
@@ -98,9 +102,16 @@ export function EventManagement() {
     }
   }
 
-  function onConfirm(city: string) {
-    setConfirmed({ city, date: date || new Date().toISOString().slice(0, 10) });
-    setModalOpen(false);
+  function onConfirm(city?: string) {
+    const locationToConfirm = city || selectedLocation?.city;
+    if (locationToConfirm) {
+      setConfirmed({ city: locationToConfirm, date: date || new Date().toISOString().slice(0, 10) });
+      setModalOpen(false);
+    }
+  }
+
+  function onSelectLocation(location: WeatherData) {
+    setSelectedLocation(location);
   }
 
   const suggestedAlternative = useMemo(() => {
@@ -162,12 +173,16 @@ export function EventManagement() {
                 </div>
               </div>
             )}
-            <div className="grid gap-4">
+            <div className="mb-4">
+              <p className="text-sm text-gray-600 mb-3">Click on any location to select it for your event:</p>
+            </div>
+            <div className="grid gap-3">
               <WeatherCard 
                 city={bestLocation.city} 
                 temperatureF={bestLocation.temperatureF} 
                 condition={bestLocation.condition} 
-                highlight 
+                selected={selectedLocation?.city === bestLocation.city}
+                onClick={() => onSelectLocation(bestLocation)}
               />
               <div className="grid sm:grid-cols-2 gap-3">
                 {others.map(o => (
@@ -175,14 +190,18 @@ export function EventManagement() {
                     key={o.city} 
                     city={o.city} 
                     temperatureF={o.temperatureF} 
-                    condition={o.condition} 
+                    condition={o.condition}
+                    selected={selectedLocation?.city === o.city}
+                    onClick={() => onSelectLocation(o)}
                   />
                 ))}
               </div>
             </div>
             <div className="mt-6 flex justify-end gap-3">
               <Button variant="secondary" onClick={() => setModalOpen(false)}>Cancel</Button>
-              <Button onClick={() => onConfirm(bestLocation.city)}>Confirm Location</Button>
+              <Button onClick={() => onConfirm()} disabled={!selectedLocation}>
+                Confirm Location
+              </Button>
             </div>
           </div>
         )}
